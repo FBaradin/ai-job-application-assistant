@@ -46,7 +46,7 @@ flowchart TD
 
 ### What you get for each posting
 
-Each posting gets its own folder under `applications/`, named `<date>_<Name>_<Role>_<Company>`, for example `2026-01-15_JaneDoe_SeniorDataAnalyst_AcmeLogistics/`:
+Each posting gets its own folder under `applications/`, named `<date>_<Role>_<Company>`, for example `2026-01-15_SeniorDataAnalyst_AcmeLogistics/`. The files inside start with `<Name>_<Role>_<Company>`, so a resume you upload to a portal carries your name:
 
 | File | When | What it is |
 |---|---|---|
@@ -339,7 +339,7 @@ All commands run as `python -m jobfit <command>` from the repository root.
 
 #### `naming.py`: file names
 
-- **Purpose:** builds `Name_JobPosition_CompanyName`. Each part is converted to ASCII, written in CamelCase and capped at 40 characters, for example `JaneDoe_SeniorDataAnalyst_AcmeLogistics`.
+- **Purpose:** builds the output names. Folders are `date_JobPosition_CompanyName` (for example `2026-01-15_SeniorDataAnalyst_AcmeLogistics`); the files inside are `Name_JobPosition_CompanyName` (for example `JaneDoe_SeniorDataAnalyst_AcmeLogistics.pdf`). Each part is converted to ASCII, written in CamelCase and capped at 40 characters.
 
 ### Command reference
 

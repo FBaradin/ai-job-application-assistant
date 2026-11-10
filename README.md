@@ -17,7 +17,7 @@ For how it works under the hood (each script, the data flow, and how to rebuild 
    ├─ Claude .................. Step 5: tailored resume draft
    ├─ jobfit build ............ schema + integrity checks → Claude revises if flagged → render
    │
-   └─ applications/2026-01-15_JaneDoe_SeniorDataAnalyst_AcmeLogistics/
+   └─ applications/2026-01-15_SeniorDataAnalyst_AcmeLogistics/
          JaneDoe_SeniorDataAnalyst_AcmeLogistics.pdf                  ← resume (Harvard, ATS-ready)
          JaneDoe_SeniorDataAnalyst_AcmeLogistics_ApplicationKit.html  ← portal fields with Copy buttons
          JaneDoe_SeniorDataAnalyst_AcmeLogistics_FitReport.md         ← the full review (7 sections)

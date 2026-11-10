@@ -15,3 +15,8 @@ def _part(text: str, limit: int = 40) -> str:
 def base_name(full_name: str, job_title: str, company: str) -> str:
     """Name_JobPosition_CompanyName, e.g. JaneDoe_SeniorDataAnalyst_AcmeLogistics."""
     return f"{_part(full_name)}_{_part(job_title)}_{_part(company)}"
+
+
+def folder_name(date: str, job_title: str, company: str) -> str:
+    """Output folder: date_JobPosition_CompanyName, e.g. 2026-01-15_SeniorDataAnalyst_AcmeLogistics."""
+    return f"{date}_{_part(job_title)}_{_part(company)}"

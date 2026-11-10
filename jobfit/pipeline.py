@@ -19,7 +19,7 @@ from pathlib import Path
 from . import ROOT
 from .config import Config
 from .guard import check_draft
-from .naming import base_name
+from .naming import base_name, folder_name
 from .profile import Profile
 from .render_kit import render_kit
 from .render_pdf import render_resume_pdf
@@ -134,7 +134,7 @@ def build(item: Path, config: Config, profile: Profile, accept_issues: bool = Fa
 
     # ---- render
     base = base_name(profile.full_name, job["title"], job["company"])
-    folder = _unique_folder(config.output_dir, f"{datetime.now():%Y-%m-%d}_{base}")
+    folder = _unique_folder(config.output_dir, folder_name(f"{datetime.now():%Y-%m-%d}", job["title"], job["company"]))
     files: list[Path] = []
     report = folder / f"{base}_FitReport.md"
     report.write_text(render_report(
