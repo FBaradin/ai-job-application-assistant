@@ -1,6 +1,8 @@
 """Merge the model's tailoring draft with facts from the master profile."""
 from __future__ import annotations
 
+import re
+
 from .profile import Profile, fmt_date, is_current
 
 SECTION_TITLES = {
@@ -18,12 +20,53 @@ def _sort_key_recent(item: dict) -> tuple:
     return (end, item.get("start") or "")
 
 
+def _company_key(item: dict) -> str:
+    return " ".join(str(item.get("company") or "").lower().split())
+
+
+def _degree_line(degree, field) -> str:
+    """'Degree, Field', but without the field when the degree already says it
+    ('Bachelor of Biosystems Engineering' + 'Engineering' -> just the degree)."""
+    degree, field = str(degree or "").strip(), str(field or "").strip()
+    words = lambda t: set(re.findall(r"[a-z0-9]+", t.lower()))  # noqa: E731
+    if degree and field and words(field) <= words(degree):
+        return degree
+    return ", ".join(x for x in (degree, field) if x)
+
+
+def group_by_company(roles: list[dict]) -> list[dict]:
+    """Most recent first, with every role at the same company kept together (newest role first).
+    Companies are ordered by their most recent role. Sets `continued` on each role that follows
+    another role at the same company, so renderers print the company heading only once."""
+    roles = sorted(roles, key=_sort_key_recent, reverse=True)
+    order = list(dict.fromkeys(_company_key(r) for r in roles))
+    roles = sorted(roles, key=lambda r: order.index(_company_key(r)))  # stable: keeps recency within a company
+    for i, r in enumerate(roles):
+        r["continued"] = i > 0 and _company_key(roles[i - 1]) == _company_key(r)
+    return roles
+
+
+def short_url(url) -> str:
+    """Visible link text: no scheme, no 'www.', no trailing slash (github.com/user)."""
+    return re.sub(r"^(https?://)?(www\.)?", "", str(url or "").strip()).rstrip("/")
+
+
+def full_url(url) -> str:
+    url = str(url or "").strip()
+    return url if not url or re.match(r"^(https?://|mailto:)", url) else "https://" + url
+
+
 def build_resume(profile: Profile, draft: dict, max_bullets: int) -> dict:
     p = profile.personal
-    contact = [x for x in (
-        profile.location_line(), p.get("phone"), p.get("email"),
-        p.get("linkedin"), p.get("github"), p.get("website"),
-    ) if x]
+    # (visible text, link target). Links are printed as visible text so ATS parsers read them.
+    contact = [(text, href) for text, href in (
+        (profile.location_line(), ""),
+        (p.get("phone"), ""),
+        (p.get("email"), f"mailto:{p.get('email')}"),
+        (short_url(p.get("linkedin")), full_url(p.get("linkedin"))),
+        (short_url(p.get("github")), full_url(p.get("github"))),
+        (short_url(p.get("website")), full_url(p.get("website"))),
+    ) if text]
 
     exp_by_id = profile.by_id("experience")
     experience = []
@@ -41,8 +84,9 @@ def build_resume(profile: Profile, draft: dict, max_bullets: int) -> dict:
             "dates": " – ".join(x for x in (fmt_date(src.get("start")), fmt_date(src.get("end"))) if x),
             "bullets": [b.strip() for b in entry.get("bullets", []) if b.strip()][:max_bullets],
         })
-    # Harvard style: reverse-chronological roles; relevance is expressed through bullet order.
-    experience.sort(key=lambda e: _sort_key_recent(e), reverse=True)
+    # Harvard style: reverse-chronological, roles at the same company grouped under one heading;
+    # relevance is expressed through bullet order.
+    experience = group_by_company(experience)
 
     edu_by_id = profile.by_id("education")
     edu_ids = draft.get("education_ids") or [e["id"] for e in profile.education]
@@ -51,7 +95,7 @@ def build_resume(profile: Profile, draft: dict, max_bullets: int) -> dict:
         src = edu_by_id.get(eid)
         if not src:
             continue
-        degree = ", ".join(x for x in (src.get("degree"), src.get("field")) if x)
+        degree = _degree_line(src.get("degree"), src.get("field"))
         if src.get("honors"):
             degree += f", {src['honors']}"
         education.append({
@@ -81,6 +125,8 @@ def build_resume(profile: Profile, draft: dict, max_bullets: int) -> dict:
             projects.append({
                 "name": src.get("name", ""),
                 "date": fmt_date(src.get("date")),
+                "url": short_url(src.get("url")),
+                "href": full_url(src.get("url")),
                 "bullets": [b for b in entry.get("bullets", []) if b.strip()][:max_bullets],
             })
 
@@ -114,7 +160,7 @@ def build_resume(profile: Profile, draft: dict, max_bullets: int) -> dict:
 
 
 def resume_markdown(r: dict) -> str:
-    out = [f"**{r['name']}**", "", " | ".join(r["contact"]), ""]
+    out = [f"**{r['name']}**", "", " | ".join(text for text, _ in r["contact"]), ""]
     for section in r["section_order"]:
         block = _md_section(r, section)
         if block:
@@ -128,7 +174,8 @@ def _md_section(r: dict, section: str) -> list[str]:
         lines.append(r["summary"])
     elif section == "experience":
         for e in r["experience"]:
-            lines.append(f"**{e['company']}** — {e['location']}  ")
+            if not e.get("continued"):
+                lines.append(f"**{e['company']}** — {e['location']}  ")
             lines.append(f"*{e['title']}* | {e['dates']}")
             lines += [f"- {b}" for b in e["bullets"]] + [""]
     elif section == "education":
@@ -141,7 +188,9 @@ def _md_section(r: dict, section: str) -> list[str]:
                   (f" ({c['date']})" if c["date"] else "") for c in r["certifications"]]
     elif section == "projects":
         for p in r["projects"]:
-            lines.append(f"**{p['name']}**" + (f" | {p['date']}" if p["date"] else ""))
+            lines.append(f"**{p['name']}**" + (f" | {p['date']}" if p["date"] else "") + ("  " if p["url"] else ""))
+            if p["url"]:
+                lines.append(p["url"])
             lines += [f"- {b}" for b in p["bullets"]] + [""]
     elif section == "skills":
         lines += [f"- **{label}:** {', '.join(items)}" for label, items in r["skills"]]

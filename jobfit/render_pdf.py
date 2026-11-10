@@ -106,9 +106,15 @@ def _plain(text: str) -> str:
     return t.replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">")
 
 
+def _link(text: str, href: str = "") -> str:
+    """Visible text, clickable when there is a target. ATS parsers read the visible text."""
+    return f'<a href="{escape(href, {chr(34): "&quot;"})}">{_t(text)}</a>' if href else _t(text)
+
+
 def render_resume_pdf(r: dict, path: Path, page_size: str = "letter") -> None:
     size = 10.5
     styles = {
+        "link": ParagraphStyle("link", fontName=REG, fontSize=size - 1, leading=(size - 1) * 1.25),
         "name": ParagraphStyle("name", fontName=BOLD, fontSize=17, leading=20, alignment=TA_CENTER),
         "contact": ParagraphStyle("contact", fontName=REG, fontSize=size, leading=size * 1.3,
                                   alignment=TA_CENTER, spaceAfter=4),
@@ -124,7 +130,7 @@ def render_resume_pdf(r: dict, path: Path, page_size: str = "letter") -> None:
     )
     story: list = [
         Paragraph(_t(r["name"]), styles["name"]),
-        Paragraph(" &nbsp;|&nbsp; ".join(_t(c) for c in r["contact"]), styles["contact"]),
+        Paragraph(" &nbsp;|&nbsp; ".join(_link(text, href) for text, href in r["contact"]), styles["contact"]),
     ]
 
     def heading(title: str):
@@ -144,13 +150,17 @@ def render_resume_pdf(r: dict, path: Path, page_size: str = "letter") -> None:
         if section == "summary" and r["summary"]:
             block = [Paragraph(_t(r["summary"]), styles["body"])]
         elif section == "experience" and r["experience"]:
-            for e in r["experience"]:
-                entry = [
-                    LeftRight(_plain(e["company"]), _plain(e["location"]), BOLD, size, REG),
-                    LeftRight(_plain(e["title"]), _plain(e["dates"]), ITAL, size, REG),
-                ] + bullets(e["bullets"]) + [Spacer(1, 4)]
-                block.append(KeepTogether(entry[:3]))
-                block += entry[3:]
+            roles = r["experience"]
+            for i, e in enumerate(roles):
+                # Roles at the same company share one company heading (see resume.group_by_company).
+                head = [] if e.get("continued") else [
+                    LeftRight(_plain(e["company"]), _plain(e["location"]), BOLD, size, REG)]
+                same_next = i + 1 < len(roles) and roles[i + 1].get("continued")
+                entry = head + [LeftRight(_plain(e["title"]), _plain(e["dates"]), ITAL, size, REG)] \
+                    + bullets(e["bullets"]) + [Spacer(1, 2 if same_next else 4)]
+                keep = len(head) + 2  # heading lines + first bullet block stay on one page
+                block.append(KeepTogether(entry[:keep]))
+                block += entry[keep:]
         elif section == "education" and r["education"]:
             for e in r["education"]:
                 block += [KeepTogether([
@@ -163,8 +173,10 @@ def render_resume_pdf(r: dict, path: Path, page_size: str = "letter") -> None:
                 block.append(LeftRight(_plain(left), _plain(c["date"]), REG, size))
         elif section == "projects" and r["projects"]:
             for p in r["projects"]:
-                block += [LeftRight(_plain(p["name"]), _plain(p["date"]), BOLD, size, REG)] + \
-                         bullets(p["bullets"]) + [Spacer(1, 3)]
+                head = [LeftRight(_plain(p["name"]), _plain(p["date"]), BOLD, size, REG)]
+                if p.get("url"):  # visible, clickable address under the project name
+                    head.append(Paragraph(_link(p["url"], p.get("href", "")), styles["link"]))
+                block += [KeepTogether(head + bullets(p["bullets"])), Spacer(1, 3)]
         elif section == "skills" and r["skills"]:
             block = [Paragraph(f"<b>{_t(label)}:</b> {_t(', '.join(items))}", styles["body"])
                      for label, items in r["skills"]]

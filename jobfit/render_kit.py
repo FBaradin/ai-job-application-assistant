@@ -38,7 +38,7 @@ def render_kit(*, profile: Profile, resume: dict, draft: dict, job: dict, base: 
 
     exp_by_id = profile.by_id("experience")
     exp_html = ["<h2>My Experience</h2>",
-                '<p class="hint">Ordered most recent first. Role descriptions are your tailored bullets.</p>']
+                '<p class="hint">Most recent first, with roles at the same company together. Role descriptions are your tailored bullets.</p>']
     for i, e in enumerate(resume["experience"], 1):
         src = exp_by_id[e["id"]]
         desc = "\n".join(f"• {b}" for b in e["bullets"])

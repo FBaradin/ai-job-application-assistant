@@ -262,7 +262,7 @@ All commands run as `python -m jobfit <command>` from the repository root.
 - **Purpose:** merges Claude's draft with facts from the profile into one resume structure.
 - **How it works:**
   - Employers, titles, locations, dates, degrees and certifications are **copied from the profile by ID**. Claude only supplies bullet text and choices.
-  - Roles are sorted newest first (Harvard style), so relevance shows in the order of bullets within each role, not the order of roles.
+  - Roles are sorted newest first (Harvard style), with every role at the same company kept together under a single company heading. Companies are ordered by their most recent role. So relevance shows in the order of bullets within each role, not the order of roles.
   - Bullets are capped at `max_bullets_per_role`.
   - Skills not in the profile are dropped.
   - Sections Claude didn't list are appended in a default order.
@@ -278,6 +278,8 @@ All commands run as `python -m jobfit <command>` from the repository root.
   - no tables, images, text boxes or headers/footers
   - simple bullets
 - **Fonts:** embeds Times New Roman on Windows and macOS, or Liberation Serif / DejaVu Serif on Linux. Otherwise it falls back to the built-in Times, which only covers Western European characters, so other characters are transliterated.
+- **Links:** email, LinkedIn, GitHub, website and project URLs are printed as visible text without `https://` (for example `github.com/JaneDoe`) and are also clickable. ATS parsers read the visible text; nothing is hidden behind icons or link words.
+- **Contact line:** city, state and country, phone, email and links, all from `personal` in the profile.
 - **Page:** Letter or A4, 0.7″ side margins, 10.5 pt body text.
 
 #### `render_kit.py`: application kit
@@ -446,7 +448,7 @@ languages:
   - language: English
     proficiency: Native
 
-projects: []                    # optional: name, date, bullets
+projects: []                    # optional: name, date, url, bullets
 
 application_info:               # used only by the application kit
   work_authorization: ""

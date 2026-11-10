@@ -189,7 +189,7 @@ class Profile:
 
     def location_line(self) -> str:
         p = self.personal
-        return ", ".join(x for x in (p.get("city"), p.get("state")) if x) or p.get("country", "")
+        return ", ".join(x for x in (p.get("city"), p.get("state"), p.get("country")) if x)
 
     def as_prompt_text(self) -> str:
         """The profile exactly as the model should see it (ids included)."""

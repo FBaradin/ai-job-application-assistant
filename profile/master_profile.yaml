@@ -99,8 +99,16 @@ languages:
   - language: ""
     proficiency: ""        # e.g. Native, Fluent, Professional, Basic
 
-# Optional side projects: name, date, bullets.
+# Optional side projects. Copy the commented block below, remove the "# " in
+# front of each line, and replace "projects: []" with "projects:".
+# "url" (e.g. a GitHub repo) is printed under the project name, as a clickable link.
 projects: []
+#   - id: project-1
+#     name: ""
+#     date: ""             # e.g. 2025-04
+#     url: ""              # e.g. github.com/your-name/your-project
+#     bullets:
+#       - ""
 
 # Pre-filled answers for application forms (only used in the Application Kit).
 application_info:
