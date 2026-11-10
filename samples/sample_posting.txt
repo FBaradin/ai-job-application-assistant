@@ -1,0 +1,24 @@
+Senior Business Intelligence Analyst - Northwind Freight (Hybrid, Miami FL)
+
+About us
+Northwind Freight is a mid-size third-party logistics provider moving temperature-controlled goods across the Southeast.
+
+What you'll do
+- Own the reporting layer for our transportation and warehouse operations teams.
+- Design, build and maintain dashboards in Power BI and Tableau that leadership uses to run weekly business reviews.
+- Write and optimise SQL against our Snowflake data warehouse; build transformation models in dbt.
+- Partner with finance on freight-cost analysis, carrier scorecards and accrual reconciliation.
+- Translate ambiguous business questions into clear analyses and present findings to non-technical audiences.
+- Mentor two junior analysts and set reporting standards for the team.
+
+What you bring
+- 5+ years in analytics or BI, ideally in logistics, supply chain or transportation.
+- Expert SQL; working knowledge of Python for automation.
+- Hands-on experience with Power BI (Tableau a plus).
+- Experience with cloud data warehouses (Snowflake preferred) and dbt.
+- Strong communication and stakeholder-management skills.
+- Bachelor's degree in a quantitative field.
+
+Nice to have
+- Experience with TMS/WMS data (e.g. MercuryGate, Manhattan).
+- Spanish language skills.

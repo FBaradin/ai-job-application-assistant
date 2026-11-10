@@ -1,0 +1,114 @@
+# ============================================================================
+# EXAMPLE master profile: a FICTIONAL person, for reference and test drives.
+# Every name, company, school and number below is made up.
+#
+# Use it to see what a complete profile looks like, or to try the workflow
+# before filling in your own (see "Test drive" in docs/GETTING_STARTED.md).
+# Your real data goes in profile/master_profile.yaml.
+# ============================================================================
+
+personal:
+  full_name: Jane Doe
+  first_name: Jane
+  last_name: Doe
+  email: jane.doe@example.com
+  phone: "+1 555 0100"
+  address_line: 100 Example Avenue
+  city: Springfield
+  state: FL
+  postal_code: "00000"
+  country: United States
+  linkedin: linkedin.com/in/jane-doe-example
+  website: ""
+  github: ""
+
+professional_profile: >
+  Business intelligence analyst with six years of experience in logistics and
+  retail, building reporting that operations and finance teams use to run the
+  business. Strongest in SQL, Power BI and turning loosely defined questions
+  into clear analyses for non-technical audiences.
+
+experience:
+  - id: harbor-bi
+    title: Business Intelligence Analyst
+    company: Harbor Line Logistics
+    location: Springfield, FL
+    employment_type: Full-time
+    start: 2021-04
+    end: present
+    bullets:
+      - Built and maintain 12 Power BI dashboards covering transportation, warehouse and carrier performance, used in weekly leadership reviews
+      - Wrote SQL models on the company's Snowflake warehouse that replaced 20 manual Excel reports
+      - Designed a carrier scorecard with the finance team that tracks on-time delivery and cost per shipment across 35 carriers
+      - Automated monthly freight accrual checks with Python, cutting close preparation from 3 days to 1 day
+      - Trained 2 junior analysts on SQL and dashboard standards
+
+  - id: brightmart-analyst
+    title: Data Analyst
+    company: BrightMart Retail
+    location: Springfield, FL
+    employment_type: Full-time
+    start: 2018-06
+    end: 2021-03
+    bullets:
+      - Produced weekly sales and inventory reporting for 40 stores using SQL Server and Excel
+      - Built the first Tableau dashboards for the merchandising team
+      - Analysed promotion results and presented recommendations to category managers
+
+education:
+  - id: example-state
+    institution: Example State University
+    degree: B.S.
+    field: Economics
+    location: Springfield, FL
+    start: 2014-08
+    end: 2018-05
+    gpa: ""
+    honors: Cum Laude
+    details:
+      - "Relevant coursework: Statistics, Econometrics, Database Systems"
+
+certifications:
+  - id: pl300
+    name: "Microsoft Certified: Power BI Data Analyst Associate"
+    issuer: Microsoft
+    issued: 2022-09
+    expires: ""
+    credential_id: ""
+    url: ""
+
+skills:
+  analytics:
+    - SQL
+    - Python
+    - Excel
+    - Data modeling
+    - Data visualization
+    - Freight cost analysis
+  tools:
+    - Power BI
+    - Tableau
+    - Snowflake
+    - SQL Server
+    - Git
+  soft_skills:
+    - Stakeholder management
+    - Presenting to non-technical audiences
+    - Mentoring
+
+languages:
+  - language: English
+    proficiency: Native
+  - language: Spanish
+    proficiency: Professional
+
+projects: []
+
+application_info:
+  work_authorization: Authorized to work in the United States
+  requires_sponsorship: "No"
+  willing_to_relocate: "No"
+  notice_period: 2 weeks
+  desired_salary: ""
+  earliest_start_date: ""
+  pronouns: ""

@@ -1,0 +1,113 @@
+# ============================================================================
+# MASTER PROFILE: everything the workflow knows about you.
+#
+# This file is the ONLY source of truth. The resume tailoring can select,
+# reorder and reword what is here, but it can never add anything that is not
+# here. So list every role, skill, tool, certification and real number you can
+# back up. More detail = better resumes.
+#
+# How to edit (YAML rules):
+#   - Keep the indentation exactly as shown (spaces, never tabs).
+#   - Text goes after "key: ". Leave "" for anything you don't have.
+#   - Put quotes around any text that contains a colon (:), e.g.
+#       name: "Microsoft Certified: Azure Data Fundamentals"
+#   - Lines starting with # are comments and are ignored.
+#   - Dates are YEAR-MONTH, e.g. 2021-03. Use "present" for a current role.
+#   - To add another job, copy a whole "- id: ..." block and paste it below.
+#   - Unused blank blocks are ignored, so you can leave them.
+#
+# See profile/example_profile.yaml for a complete, filled-in example.
+# Check your work: in Claude Code, type "validate my master profile".
+# ============================================================================
+
+personal:
+  full_name: ""            # REQUIRED - as it should appear on your resume
+  first_name: ""
+  last_name: ""
+  email: ""                # REQUIRED
+  phone: ""                # quote it, e.g. "+1 555 0100"
+  address_line: ""         # only used to pre-fill application forms
+  city: ""
+  state: ""
+  postal_code: ""          # quote it, e.g. "33101"
+  country: ""
+  linkedin: ""             # e.g. linkedin.com/in/your-name
+  website: ""
+  github: ""
+
+# A few sentences about you, in your own words. Used as raw material for the
+# resume summary.
+professional_profile: >
+
+
+# Most recent job first. At least one job is REQUIRED (title, company, start).
+experience:
+  - id: job-1              # any short unique name, no spaces
+    title: ""
+    company: ""
+    location: ""           # e.g. Miami, FL  or  Remote
+    employment_type: ""    # e.g. Full-time, Contract
+    start: ""              # e.g. 2021-03
+    end: ""                # e.g. 2024-06  or  present
+    bullets:               # what you did and achieved; include real numbers
+      - ""
+      - ""
+
+  - id: job-2
+    title: ""
+    company: ""
+    location: ""
+    employment_type: ""
+    start: ""
+    end: ""
+    bullets:
+      - ""
+
+education:
+  - id: edu-1
+    institution: ""
+    degree: ""             # e.g. B.S.
+    field: ""              # e.g. Economics
+    location: ""
+    start: ""
+    end: ""
+    gpa: ""
+    honors: ""
+    details: []            # e.g. ["Thesis: ...", "Relevant coursework: ..."]
+
+certifications:
+  - id: cert-1
+    name: ""
+    issuer: ""
+    issued: ""             # e.g. 2023-06
+    expires: ""
+    credential_id: ""
+    url: ""
+
+# Group your skills however you like: the group names are up to you.
+# One skill per line (or a [list, like, this]). At least one skill is REQUIRED.
+# The tailored resume can only use skills listed here.
+skills:
+  technical:
+    - ""
+  tools:
+    - ""
+  soft_skills:
+    - ""
+
+languages:
+  - language: ""
+    proficiency: ""        # e.g. Native, Fluent, Professional, Basic
+
+# Optional side projects: name, date, bullets.
+projects: []
+
+# Pre-filled answers for application forms (only used in the Application Kit).
+application_info:
+  work_authorization: ""
+  requires_sponsorship: ""
+  willing_to_relocate: ""
+  notice_period: ""
+  desired_salary: ""
+  earliest_start_date: ""
+  pronouns: ""

@@ -1,0 +1,28 @@
+# Job-fit workflow settings. Gmail credentials go in the git-ignored .env file.
+
+fit_threshold: 65            # tailor the resume only at or above this score
+
+profile_path: profile/master_profile.yaml
+output_dir: applications
+
+resume:
+  page_size: letter          # letter | A4
+  max_bullets_per_role: 6
+
+gmail:
+  # Gmail label you put job emails under. Nested labels use "/": "Jobs/To Review"
+  source_label: "Job Opportunities"
+  # Added after a message is reviewed so it is never analysed twice.
+  processed_label: "Job Opportunities/Processed"
+  error_label: "Job Opportunities/Error"
+  max_per_run: 5
+
+notify:
+  # Email the results (report + resume + application kit) back to yourself.
+  email_results: true
+  # Gmail label applied to that results email ("" to skip).
+  results_label: "Job Opportunities/JobFit"
+
+tracker:
+  # Google Sheets job tracker (credentials and sheet id go in .env; see docs/GETTING_STARTED.md, part 6).
+  enabled: true
