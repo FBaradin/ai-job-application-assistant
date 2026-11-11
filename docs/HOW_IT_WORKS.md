@@ -471,6 +471,7 @@ application_info:               # used only by the application kit
   willing_to_relocate: ""
   notice_period: ""
   desired_salary: ""
+  desired_hourly_rate: ""
   earliest_start_date: ""
   pronouns: ""
 ```

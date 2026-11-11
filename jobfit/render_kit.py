@@ -100,7 +100,9 @@ def render_kit(*, profile: Profile, resume: dict, draft: dict, job: dict, base: 
     for label, key in (("Work authorization", "work_authorization"),
                        ("Will you now or in the future require sponsorship?", "requires_sponsorship"),
                        ("Willing to relocate?", "willing_to_relocate"), ("Notice period", "notice_period"),
-                       ("Desired salary", "desired_salary"), ("Earliest start date", "earliest_start_date"),
+                       ("Desired salary", "desired_salary"),
+                       ("Desired hourly rate (freelance/contract)", "desired_hourly_rate"),
+                       ("Earliest start date", "earliest_start_date"),
                        ("Pronouns", "pronouns")):
         q_html.append(_field(label, str(info.get(key) or "")))
     for a in draft.get("application_answers", []):

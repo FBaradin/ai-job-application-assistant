@@ -110,5 +110,6 @@ application_info:
   willing_to_relocate: "No"
   notice_period: 2 weeks
   desired_salary: ""
+  desired_hourly_rate: ""
   earliest_start_date: ""
   pronouns: ""
