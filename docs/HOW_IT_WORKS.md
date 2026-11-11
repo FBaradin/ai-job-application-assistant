@@ -61,7 +61,9 @@ Each posting gets its own folder under `applications/`, named `<date>_<Role>_<Co
 1. **You label an email.** A recruiter email lands in Gmail and you (or a Gmail filter) put it under the `Job Opportunities` label.
 2. **You type `/review-jobs`.** Claude Code loads the skill file [`.claude/skills/review-jobs/SKILL.md`](../.claude/skills/review-jobs/SKILL.md), which is the step-by-step procedure Claude follows.
 3. **Setup check.** Claude creates the Python environment if it's missing and runs `jobfit validate`, which stops the run if the master profile has problems.
-4. **Queueing.** `jobfit fetch` logs in to Gmail and finds emails under the label that haven't been processed yet. It turns each one into plain text. If an email is only a short teaser, it follows the email's links and fetches the full job page. Each posting becomes a folder in `inbox/`, and a "Pending" row appears in the Google Sheets tracker.
+4. **Queueing.** `jobfit fetch` logs in to Gmail and finds emails under the label that haven't been processed yet. It turns each one into plain text. If an email is only a short teaser, it follows the email's links and fetches the full job page. When the email links to several job pages, each page that loads becomes its own posting, so one email can produce several reviews; links that need a login are listed so you can paste their text instead. Before queueing, each posting is checked for duplicates (see below). Each new posting becomes a folder in `inbox/`, and a "Pending" row appears in the Google Sheets tracker.
+
+   **Duplicate check.** A posting is skipped, before any analysis, when it is the same job as a review already saved in `applications/`, a job already waiting in `inbox/`, or another posting in the same batch. "Same job" means the same job link (ignoring tracking and language parts of the address) or at least 80% identical text. Different jobs from one company share their "About us" and benefits text but stay well below that line. An email whose jobs are all duplicates is tagged `Job Opportunities/Duplicate` so it is not fetched again, and Claude lists it in the final report. Reviews marked "Not evaluable" don't count, because their job text never loaded. `jobfit add --force` queues a posting even if it looks like a duplicate.
 5. **Analysis (Steps 1–4).** Claude reads the posting, your master profile and the analyst instructions in [`prompts/analysis.md`](../prompts/analysis.md). It writes `analysis.json`, which contains:
    - what the job requires
    - which requirements you match strongly, partially or not at all, each with evidence from your profile
@@ -76,7 +78,7 @@ Each posting gets its own folder under `applications/`, named `<date>_<Role>_<Co
    - answers to common portal questions
    - a change log explaining each choice
 8. **Integrity checks.** `jobfit build` runs again. If the draft contains a number that isn't in your profile, a tool from the posting that you don't have, or a long phrase copied from the posting, the build rejects it and Claude revises it, up to two times.
-9. **Rendering and bookkeeping.** `jobfit build` writes the report, PDF and kit to `applications/`, tags the Gmail message `Job Opportunities/Processed` so it's never reviewed twice, emails you the results (subject starting `[JobFit]`), updates the tracker row and clears the item from `inbox/`.
+9. **Rendering and bookkeeping.** `jobfit build` writes the report, PDF and kit to `applications/`, tags the Gmail message `Job Opportunities/Processed` so it's never reviewed twice (for an email with several jobs, after the last one is built), emails you the results (subject starting `[JobFit]`), updates the tracker row and clears the item from `inbox/`.
 10. **Save and report.** If the folder is a Git repository with a remote, Claude commits and pushes the new `applications/` folders. Either way, it shows you a short summary table: role, company, score, recommendation, and whether a resume was generated.
 
 ---
@@ -314,16 +316,28 @@ All commands run as `python -m jobfit <command>` from the repository root.
 - **Purpose:** turns an email or URL into plain text.
 - **How it works:**
   - Uses the email's plain-text part, or converts the HTML part if the text is very short.
-  - If the body is under 1,200 characters, it follows up to 3 links, skipping unsubscribe, privacy and image links, and appends the first page that yields enough text.
+  - If the body is under 1,200 characters, it follows the email's links, skipping unsubscribe, privacy and image links:
+    - **Job links** (a `/jobs/` or `/careers/` style address, or a known job board such as Greenhouse, Lever, Workday or SmartRecruiters): each one is fetched, up to 10, and every page with enough text becomes a separate posting. Links that don't load are reported.
+    - **Other links:** up to 3 are tried, and the first page with enough text is appended.
   - HTML is cleaned by removing scripts, styles, navigation, headers and footers.
 - **Limitation:** pages behind a login wall can't be read, and the page is fetched without running JavaScript.
+
+#### `duplicates.py`: duplicate check
+
+- **Purpose:** stops the same job from being analysed twice.
+- **How it works:**
+  - Compares each new posting with every saved review in `applications/` (its `job_posting.txt` and the source link in `analysis.json`), every job waiting in `inbox/`, and the postings queued earlier in the same `fetch`.
+  - **Same link:** the job page address, with tracking and language parameters (`utm_…`, `lang`, `ref`…), `www.` and trailing slashes removed.
+  - **Same text:** the share of 5-word sequences the two postings have in common (Jaccard similarity) is at least 80%. Measured on real postings, re-sent copies of a job score about 97–99%, while different jobs from the same company score under 50%.
+  - It deliberately doesn't ask whether one text is *contained* in the other: two careers pages that failed to load share all their menu text and would look like the same job.
+- **Limitation:** the same job posted on two different sites (say, LinkedIn and the company page) with different wording is not caught.
 
 #### `gmail_client.py`: Gmail over IMAP/SMTP
 
 - **Purpose:** reads the label, marks messages processed, and sends the results email.
 - **Why IMAP instead of the Gmail API:** an app password is enough, so there's no Google Cloud project or OAuth consent screen. Gmail shows each label as an IMAP folder and supports the `X-GM-LABELS` extension for adding labels.
 - **How it works:**
-  - **Fetching:** skips messages that already carry the processed or error label, are already queued in `inbox/`, or start with `[JobFit]` (its own results emails). Messages are read with `BODY.PEEK`, so they stay unread.
+  - **Fetching:** skips messages that already carry the processed, error or duplicate label, are already queued in `inbox/`, or start with `[JobFit]` (its own results emails). Messages are read with `BODY.PEEK`, so they stay unread.
   - **Results email:** sent to yourself over SMTP with the report, PDF and kit attached. The script then finds that email through Gmail search (retrying for up to 60 seconds) and applies the results label.
 
 #### `tracker.py`: Google Sheets tracker
@@ -348,8 +362,8 @@ All commands run as `python -m jobfit <command>` from the repository root.
 | Command | What it does |
 |---|---|
 | `jobfit validate` | Checks the master profile and prints a one-line summary |
-| `jobfit fetch` | Queues new emails from the Gmail label (up to `max_per_run`) |
-| `jobfit add <file-or-url>` | Queues one posting from a text file or a public URL |
+| `jobfit fetch` | Queues new emails from the Gmail label (up to `max_per_run`); duplicates are skipped and labelled |
+| `jobfit add <file-or-url> [--force]` | Queues one posting from a text file or a public URL; skips duplicates unless `--force` |
 | `jobfit list` | Lists queued items and whether each has an analysis and a tailoring |
 | `jobfit schema analysis` | Prints the JSON schema for Steps 1–4 |
 | `jobfit schema tailoring` | Prints the JSON schema for Step 5, built from your profile |
@@ -371,6 +385,7 @@ All commands run as `python -m jobfit <command>` from the repository root.
 | `gmail.source_label` | `Job Opportunities` | Label to read job emails from |
 | `gmail.processed_label` | `Job Opportunities/Processed` | Added after a review |
 | `gmail.error_label` | `Job Opportunities/Error` | Messages with this label are skipped |
+| `gmail.duplicate_label` | `Job Opportunities/Duplicate` | Added to an email whose job was already reviewed or queued; such messages are skipped |
 | `gmail.max_per_run` | `5` | Maximum emails queued per `fetch` |
 | `notify.email_results` | `true` | Email the results to yourself |
 | `notify.results_label` | `Job Opportunities/JobFit` | Label for the results email (`""` to skip) |
@@ -484,7 +499,8 @@ The core review never depends on the optional integrations:
 - **No `.env`:** files, URLs and pasted text still work. Gmail fetch, labels and the results email are skipped with a printed reason.
 - **Tracker not configured or unreachable:** prints `Tracker step skipped: …` and the review continues.
 - **Invalid profile:** the run stops at the setup check with a list of specific problems.
-- **Posting that isn't a single job** (for example a digest of many job titles): Claude marks it not evaluable. It still gets a report, and the email is still marked processed.
+- **Email with several job links:** each job page that loads is reviewed separately; the email is marked processed after the last one.
+- **Posting that isn't a single job** (for example a digest of many job titles with no readable job pages): Claude marks it not evaluable. It still gets a report, and the email is still marked processed.
 - **Page behind a login wall:** `add <url>` asks you to save the text to a file instead.
 
 ---
@@ -533,5 +549,6 @@ The core review never depends on the optional integrations:
 | The overall procedure | [`.claude/skills/review-jobs/SKILL.md`](../.claude/skills/review-jobs/SKILL.md) |
 | Report sections, resume look, or kit fields | `render_report.py`, `render_pdf.py`, `render_kit.py` |
 | Integrity strictness (for example the 8-word phrase length) | `SHINGLE` and the checks in [`jobfit/guard.py`](../jobfit/guard.py) |
+| How alike two postings must be to count as duplicates | `SIMILARITY` in [`jobfit/duplicates.py`](../jobfit/duplicates.py) |
 
 When you change the weights or the threshold, update the prompt text too. Claude is told the weights so its recommendation stays consistent with the computed score.

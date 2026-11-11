@@ -160,7 +160,7 @@ With Gmail connected, you just put job emails under a Gmail label and type `/rev
 3. Name it exactly **`Job Opportunities`** and click **Create**.
 4. Put job emails under it: open an email, click the **label icon** at the top, and tick **Job Opportunities**.
 
-**Tip:** the best results come from **one job per email with the full description**. Job-alert emails listing many jobs can't be evaluated. Pages behind a login (like LinkedIn when signed out) can't be read.
+**Tip:** the best results come from an email with the full job description, or with links to the job pages. An email that only lists links to several jobs is fine: each job page that opens is reviewed on its own. A job-alert email that lists titles without readable job pages can't be evaluated, and pages behind a login can't be read.
 
 *Optional filter:* to label emails automatically, use Gmail's search options to **Create filter → Apply the label: Job Opportunities**. Make sure the filter does **not** match emails whose subject starts with `[JobFit]`. Those are the workflow's own results emails.
 

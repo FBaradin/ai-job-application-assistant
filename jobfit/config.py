@@ -40,6 +40,7 @@ class Config:
     source_label: str = "Job Opportunities"
     processed_label: str = "Job Opportunities/Processed"
     error_label: str = "Job Opportunities/Error"
+    duplicate_label: str = "Job Opportunities/Duplicate"
     max_per_run: int = 5
     email_results: bool = True
     results_label: str = "Job Opportunities/JobFit"
@@ -62,6 +63,7 @@ class Config:
         c.source_label = gmail.get("source_label", c.source_label)
         c.processed_label = gmail.get("processed_label", c.processed_label)
         c.error_label = gmail.get("error_label", c.error_label)
+        c.duplicate_label = gmail.get("duplicate_label", c.duplicate_label)
         c.max_per_run = int(gmail.get("max_per_run", c.max_per_run))
         c.email_results = bool(notify.get("email_results", c.email_results))
         c.results_label = str(notify.get("results_label", c.results_label) or "")

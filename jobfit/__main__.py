@@ -4,6 +4,8 @@
   python -m jobfit fetch                 pull new emails from the Gmail label into inbox/
   python -m jobfit add posting.txt       queue a posting saved as a text file
   python -m jobfit add https://...       queue a posting from a public web page
+                                         (fetch and add skip postings that were already reviewed or
+                                          queued; add --force to queue one anyway)
   python -m jobfit list                  show queued postings and what each one still needs
   python -m jobfit schema analysis|tailoring   print the JSON schema Claude must follow
   python -m jobfit build inbox/<id>      validate, score, check and render the review
@@ -62,22 +64,53 @@ def _track_items(config: Config, items: list[Path]) -> None:
         print(f"Tracker step skipped: {e}")
 
 
+def _known_postings(config: Config):
+    from . import ROOT
+    from .duplicates import known_postings
+    from .pipeline import list_items
+    return known_postings(config.output_dir, list_items(), ROOT)
+
+
 def cmd_fetch(config: Config) -> int:
+    from . import ROOT
+    from .duplicates import describe, find_duplicate, remember
     from .gmail_client import Gmail
-    from .job_text import email_to_posting
+    from .job_text import email_to_postings
     from .pipeline import new_item, queued_gmail_uids
 
-    queued = []
+    queued, duplicates = [], 0
+    known = _known_postings(config)
     with Gmail() as gm:
-        messages = gm.unprocessed(config.source_label, [config.processed_label, config.error_label],
+        messages = gm.unprocessed(config.source_label,
+                                  [config.processed_label, config.error_label, config.duplicate_label],
                                   config.max_per_run, skip_uids=queued_gmail_uids())
         print(f"{len(messages)} new message(s) under '{config.source_label}'.")
         for m in messages:
-            posting, source = email_to_posting(m.subject, m.text, m.html)
-            item = new_item(posting, f"Gmail: {m.subject} ({m.date})",
-                            {"gmail_uid": m.uid, "subject": m.subject, "date": m.date, "fetched_from": source})
-            queued.append(item)
-            print(f"  queued {item.name}  ({len(posting)} chars, {source})")
+            postings, unreadable = email_to_postings(m.subject, m.text, m.html)
+            if len(postings) > 1:
+                print(f"  email '{m.subject}' links to {len(postings)} job pages: each is queued separately.")
+            for url in unreadable:
+                print(f"  COULD NOT READ job link in email '{m.subject}': {url} "
+                      f"(login wall or blocked; paste its text or save it to a file to review it).")
+            new = 0
+            for posting, source in postings:
+                meta = {"gmail_uid": m.uid, "subject": m.subject, "date": m.date, "fetched_from": source}
+                dup = find_duplicate(posting, meta, known)
+                if dup:
+                    duplicates += 1
+                    what = source.removeprefix("email + ") if len(postings) > 1 else f"email '{m.subject}' ({m.date})"
+                    print(f"  DUPLICATE, skipped: {what} is the {describe(*dup)}.")
+                    continue
+                item = new_item(posting, f"Gmail: {m.subject} ({m.date})", meta)
+                remember(known, item, ROOT)
+                queued.append(item)
+                new += 1
+                print(f"  queued {item.name}  ({len(posting)} chars, {source})")
+            if not new:   # every job in this email was already reviewed or queued
+                gm.add_label(m.uid, config.duplicate_label)
+                print(f"  email '{m.subject}' labelled '{config.duplicate_label}' (nothing new in it).")
+    if duplicates:
+        print(f"Duplicates: {duplicates} posting(s) skipped, not queued for analysis.")
     _track_items(config, queued)
     return 0
 
@@ -102,7 +135,8 @@ def cmd_tracker(action: str, config: Config) -> int:
     return 0
 
 
-def cmd_add(target: str, config: Config) -> int:
+def cmd_add(target: str, config: Config, force: bool = False) -> int:
+    from .duplicates import describe, find_duplicate
     from .job_text import fetch_url_text
     from .pipeline import new_item
 
@@ -112,10 +146,16 @@ def cmd_add(target: str, config: Config) -> int:
             print("Could not fetch that page (login wall or blocked). Save the text to a file instead.",
                   file=sys.stderr)
             return 2
-        item = new_item(text, target, {"subject": target.split("/")[2]})
+        source, meta = target, {"subject": target.split("/")[2]}
     else:
         path = Path(target)
-        item = new_item(path.read_text(encoding="utf-8"), f"file: {path.name}", {"subject": path.stem})
+        text, source, meta = path.read_text(encoding="utf-8"), f"file: {path.name}", {"subject": path.stem}
+    dup = None if force else find_duplicate(text, {"source": source, **meta}, _known_postings(config))
+    if dup:
+        print(f"DUPLICATE, skipped: this is the {describe(*dup)}. Not queued "
+              f"(use --force to review it again anyway).")
+        return 0
+    item = new_item(text, source, meta)
     print(f"queued {item}")
     _track_items(config, [item])
     return 0
@@ -167,10 +207,15 @@ def cmd_build(item: Path, config: Config, profile: Profile, accept_issues: bool)
         try:
             from .gmail_client import Gmail, send_results
             if o.meta.get("gmail_uid"):
-                with Gmail() as gm:
-                    gm.select(config.source_label)
-                    gm.add_label(str(o.meta["gmail_uid"]), config.processed_label)
-                print(f"Gmail: labelled '{config.processed_label}'.")
+                from .pipeline import queued_gmail_uids
+                if str(o.meta["gmail_uid"]) in queued_gmail_uids(exclude=item):
+                    print(f"Gmail: other jobs from this email are still queued; it is labelled "
+                          f"'{config.processed_label}' after the last one is built.")
+                else:
+                    with Gmail() as gm:
+                        gm.select(config.source_label)
+                        gm.add_label(str(o.meta["gmail_uid"]), config.processed_label)
+                    print(f"Gmail: labelled '{config.processed_label}'.")
             if config.email_results:
                 msg_id = send_results(f"{o.score:.0f}% {o.band} — {o.title} @ {o.company}", _summary(o), o.files)
                 print("Gmail: results emailed to you.")
@@ -209,6 +254,7 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("fetch")
     a = sub.add_parser("add")
     a.add_argument("target")
+    a.add_argument("--force", action="store_true", help="queue it even if it looks like a duplicate")
     sub.add_parser("list")
     s = sub.add_parser("schema")
     s.add_argument("which", choices=["analysis", "tailoring"])
@@ -234,7 +280,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd == "fetch":
         return cmd_fetch(config)
     if args.cmd == "add":
-        return cmd_add(args.target, config)
+        return cmd_add(args.target, config, args.force)
     if args.cmd == "tracker":
         return cmd_tracker(args.action, config)
     if args.cmd == "list":

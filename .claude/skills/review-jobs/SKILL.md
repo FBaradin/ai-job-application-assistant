@@ -21,8 +21,9 @@ Input from the user: $ARGUMENTS
 
 - If the input above is a file path or URL: `PY -m jobfit add "<path-or-url>"`.
 - If the input is pasted posting text: write it to a file in your scratchpad directory, then `add` that file.
-- If there is no input: `PY -m jobfit fetch`. If it says the Gmail credentials are missing, tell the user Gmail is not set up yet (see `docs/GETTING_STARTED.md`, "Optional: connect Gmail") and continue with anything already queued.
-- Then `PY -m jobfit list`. If the inbox is empty, say so and stop.
+- If there is no input: `PY -m jobfit fetch`. An email that links to several job pages is split into one queued item per page; lines starting "COULD NOT READ" name job links that need a login - list them in the final report and suggest pasting their text. If it says the Gmail credentials are missing, tell the user Gmail is not set up yet (see `docs/GETTING_STARTED.md`, "Optional: connect Gmail") and continue with anything already queued.
+- **Duplicate check (automatic).** `fetch` and `add` compare every new posting with the saved reviews in `applications/`, the jobs already waiting in `inbox/`, and the other postings in the same batch. A posting with the same job link or nearly identical text (80%+) is not queued: the command prints a line starting "DUPLICATE, skipped" naming the earlier review or queued item, and an email whose jobs are all duplicates gets the label `Job Opportunities/Duplicate` so it is not fetched again. Do not analyse duplicates. Note each one for the final report. Only re-queue one with `PY -m jobfit add "<path-or-url>" --force` if the user explicitly asks for a fresh review. Reviews marked "Not evaluable" are not counted, so a readable copy of such a job is reviewed normally.
+- Then `PY -m jobfit list`. If the inbox is empty, say so (mentioning any duplicates that were skipped) and stop.
 - `fetch`, `add` and `build` also update the Google Sheets job tracker when it is configured. A line starting "Tracker:" reports what happened; "Tracker step skipped" is not an error for the review, but mention it in the final report.
 
 ## 2. Review each queued item (`inbox/<id>/`)
@@ -43,7 +44,7 @@ For each item:
    - `needs_tailoring` (score >= threshold): get `PY -m jobfit schema tailoring`, write `inbox/<id>/tailoring.json` following `prompts/tailoring.md` (Step 5, plus `application_answers` and `change_log`), build again.
    - `invalid_tailoring`: fix the schema errors (experience/education/certification IDs and skills must be values from the profile's enums), build again.
    - `integrity_issues`: the checker found a number not in the profile, a posting tool not in the profile, or an 8+ word phrase copied from the posting. Revise `tailoring.json` to remove or reword each flagged item using the profile's own wording, and build again. After two revisions, if an item is a genuine false positive, build with `--accept-issues` (the remaining items are listed in the report for the user to check) and tell the user which items and why.
-   - `done`: note the score, band, decision and output files. The build labels the Gmail message as processed and emails the results when configured; mention if it printed "Gmail step skipped".
+   - `done`: note the score, band, decision and output files. The build labels the Gmail message as processed (after the last job from that email) and emails the results when configured; mention if it printed "Gmail step skipped".
 4. If the posting is not a single evaluable job (e.g. a digest of many job titles), set `job.is_evaluable` to false with the reason, still write a complete analysis, and build - the report records it and the email is marked processed.
 
 ## 3. Save to Git (only if set up)
@@ -52,4 +53,4 @@ Skip this step silently unless the folder is a Git repository with a remote (`gi
 
 ## 4. Report to the user
 
-Give a short table, one row per posting: role, company, score and band, recommendation, and whether a resume was generated. Under it, the path of each output folder and any integrity items that were accepted. Keep the detailed reasoning in the report files - don't repeat it in chat.
+Give a short table, one row per posting: role, company, score and band, recommendation, and whether a resume was generated. Under it, the path of each output folder and any integrity items that were accepted. If any postings were skipped as duplicates, list them separately (email subject or file, and the earlier review or queued item they match) so the user knows they were not analysed. Keep the detailed reasoning in the report files - don't repeat it in chat.

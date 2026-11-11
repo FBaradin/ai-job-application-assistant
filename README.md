@@ -24,7 +24,7 @@ For how it works under the hood (each script, the data flow, and how to rebuild 
          analysis.json, job_posting.txt                               ← raw data, for traceability
 ```
 
-When a review is finished, the Gmail message is tagged `Job Opportunities/Processed` so it's never reviewed twice. The results are emailed back to you (subject starts with `[JobFit]`), added to an optional Google Sheets tracker, and committed to Git if this folder is a Git repository with a remote.
+An email that links to several job pages becomes one review per job. When the reviews are finished, the Gmail message is tagged `Job Opportunities/Processed` so it's never reviewed twice. A posting you already reviewed (or that is already queued) is skipped before any analysis and its email is tagged `Job Opportunities/Duplicate`. The results are emailed back to you (subject starts with `[JobFit]`), added to an optional Google Sheets tracker, and committed to Git if this folder is a Git repository with a remote.
 
 ## Using it
 
@@ -80,7 +80,7 @@ Use `.venv\Scripts\python` on Windows or `.venv/bin/python` on macOS in place of
 ```bash
 python -m jobfit validate                  # check the master profile
 python -m jobfit fetch                     # queue new Gmail postings into inbox/
-python -m jobfit add <file-or-url>         # queue one posting
+python -m jobfit add <file-or-url>         # queue one posting (--force to queue a duplicate anyway)
 python -m jobfit list                      # what's queued
 python -m jobfit schema analysis           # JSON schema for Steps 1-4
 python -m jobfit schema tailoring          # JSON schema for Step 5 (built from your profile)

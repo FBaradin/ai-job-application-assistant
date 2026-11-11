@@ -56,9 +56,12 @@ def list_items() -> list[Path]:
     return sorted(p for p in INBOX.iterdir() if (p / "posting.txt").exists())
 
 
-def queued_gmail_uids() -> set[str]:
+def queued_gmail_uids(exclude: Path | None = None) -> set[str]:
+    """Gmail message ids of the items waiting in the inbox (optionally ignoring one item)."""
     uids = set()
     for item in list_items():
+        if exclude is not None and item.resolve() == Path(exclude).resolve():
+            continue
         meta = json.loads((item / "meta.json").read_text(encoding="utf-8"))
         if meta.get("gmail_uid"):
             uids.add(str(meta["gmail_uid"]))
