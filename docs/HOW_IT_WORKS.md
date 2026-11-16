@@ -55,6 +55,8 @@ Each posting gets its own folder under `applications/`, named `<date>_<Role>_<Co
 | `…_ApplicationKit.html` | Score ≥ 65% | Every portal field (contact details, roles, education, skills, screening answers) with a **Copy** button |
 | `analysis.json` | Always | Everything Claude produced, plus the score and any integrity notes, kept for traceability |
 | `job_posting.txt` | Always | The posting text exactly as it was reviewed |
+| `…_InterviewPrep.md` | When you run `/interview-prep` | Interview cheatsheet: pitch, STAR success stories, likely questions with answers, questions to ask the interviewer |
+| `…_LearningGuide.md` | When you run `/learn-gaps` | Short plain-language lessons on each gap from the review: core idea, worked example, key terms, self-check, practice task |
 
 ### Walkthrough: one posting from start to finish
 
@@ -102,6 +104,8 @@ Each posting gets its own folder under `applications/`, named `<date>_<Role>_<Co
 
 ```
 .claude/skills/review-jobs/SKILL.md   the /review-jobs procedure Claude follows
+.claude/skills/interview-prep/SKILL.md  the /interview-prep procedure (interview cheatsheet for one application)
+.claude/skills/learn-gaps/SKILL.md      the /learn-gaps procedure (learning guide for one application's gaps)
 prompts/analysis.md                   analyst instructions for Steps 1-4
 prompts/tailoring.md                  resume-strategist instructions for Step 5
 CLAUDE.md                             standing instructions Claude Code loads automatically

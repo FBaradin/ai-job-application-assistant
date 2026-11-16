@@ -39,6 +39,24 @@ Open this folder in VS Code with Claude Code and type:
 
 You can also just say "review my new job emails".
 
+### Preparing for an interview
+
+| You type | What happens |
+|---|---|
+| `/interview-prep` | Lists your reviewed jobs and asks which one the interview is for |
+| `/interview-prep PriceSmart` | Uses the application folder whose name contains "PriceSmart" |
+
+Claude reads that folder's resume, application kit, fit report and job posting, and saves `…_InterviewPrep.md` in the same folder. The cheatsheet has your "tell me about yourself" pitch, a bank of success stories, basic, behavioral (STAR method), role-specific and AI-at-work questions with suggested answers, honest answers for your gaps, and questions to ask the interviewer. Answers use only facts from your master profile; anything the profile doesn't say is left as an `[add: …]` blank for you to fill in.
+
+### Learning what you're missing
+
+| You type | What happens |
+|---|---|
+| `/learn-gaps` | Lists your reviewed jobs and asks which one to study for |
+| `/learn-gaps PriceSmart` | Uses the application folder whose name contains "PriceSmart" |
+
+Claude takes the gaps from that job's fit review (missing and partial requirements) and saves `…_LearningGuide.md` in the same folder: a short guide in plain language that teaches the core idea of each gap, with a worked example, key terms, an honest line to use in the interview, a quick self-check and a one-hour practice task. Gaps a guide can't fix, such as years of experience or a degree, get a one-line tip instead.
+
 ## How it stops fabrication
 
 Your master profile is the only source of truth, and that rule is enforced in code as well as in the instructions:
@@ -71,6 +89,8 @@ Without `.env`, everything still works for files, URLs and pasted text; only the
 - **[config.yaml](config.yaml):** the 65% threshold, which profile file to use, label names, page size (`letter`/`A4`), max bullets per role, and the results-email and tracker switches.
 - **[prompts/analysis.md](prompts/analysis.md)** and **[prompts/tailoring.md](prompts/tailoring.md):** the analyst's instructions that Claude follows.
 - **[.claude/skills/review-jobs/SKILL.md](.claude/skills/review-jobs/SKILL.md):** the `/review-jobs` procedure.
+- **[.claude/skills/interview-prep/SKILL.md](.claude/skills/interview-prep/SKILL.md):** the `/interview-prep` procedure (cheatsheet sections and answer rules).
+- **[.claude/skills/learn-gaps/SKILL.md](.claude/skills/learn-gaps/SKILL.md):** the `/learn-gaps` procedure (which gaps get taught and how each lesson is laid out).
 - **Score weights** (40/25/15/10/10) are in [jobfit/config.py](jobfit/config.py).
 
 ## Manual commands
